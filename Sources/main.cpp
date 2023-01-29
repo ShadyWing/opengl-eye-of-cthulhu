@@ -109,7 +109,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// 纹理图像
 	int width, height, nrChannels;
-	unsigned char* data = stbi_load("Resources/Textures/container.jpg", &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load("resources/textures/container.jpg", &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		//x,x,读进来是什么通道，x,x,x,源文件是什么通道
@@ -132,7 +132,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// 纹理图像
 	stbi_set_flip_vertically_on_load(true);
-	data = stbi_load("Resources/Textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	data = stbi_load("resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		//x,x,读进来是什么通道，x,x,x,源文件是什么通道
