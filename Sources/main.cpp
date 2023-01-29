@@ -1,36 +1,17 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 
+#include <myinclude/shader.h>
+#include <stb_image.h>
+
 #include <iostream>
 
 
 void framebuffer_size_callback(GLFWwindow*, int width, int height);
 void processInput(GLFWwindow* window);
-void fprintShaderInfo(int shader);
-void fprintShaderProgramInfo(int shaderProgram);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
-
-const GLchar* vertexShaderSource = 
-"#version 460 core\n\
-layout (location = 0) in vec3 aPos;\n\
-layout (location = 1) in vec3 aColor;\n\
-out vec3 ourColor;\n\
-void main()\n\
-{\n\
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n\
-	ourColor = aColor;\n\
-}\0";
-
-const char* fragmentShaderSource = 
-"#version 460 core\n\
-in vec3 ourColor;\n\
-out vec4 FragColor;\n\
-void main()\n\
-{\n\
-	FragColor = vec4(ourColor, 1.0);\n\
-}\0";
 
 
 
@@ -74,26 +55,7 @@ int main()
 
 
 	// 设置shader
-	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	fprintShaderInfo(vertexShader);
-
-	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-	fprintShaderInfo(fragmentShader);
-
-	unsigned int shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	fprintShaderInfo(shaderProgram);
-
-	glUseProgram(shaderProgram);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
+	Shader ourShader("Shaders/vertex.vs", "Shaders/fragment.fs");
 	
 	// 绘制内容
 	float vertices[] = {
@@ -120,23 +82,33 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 
+	// 纹理
+	int width , height , nrChannels;
+	unsigned char* data = stbi_load("Resources/Textures/container.jpg", &width, &height, &nrChannels, 0);
+	
+	unsigned int texture;
+	glGenTextures(1 , &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
 	// 使窗口循环响应事件
-	while (!glfwWindowShouldClose(window))
+	while ( !glfwWindowShouldClose ( window ) )
 	{
 		processInput(window);
-
+	
 		// 对 ColorBuffer 设定、清空
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// 访问uniform变量
-		//float time = glfwGetTime();
-		//float greenValue = (sin(time) / 2.0f) + 0.5f;
-		//int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-		//glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+		//int vertexColorLocation = glGetUniformLocation(ourShader.ID, "horizonOffset");
+		//glUniform1f(vertexColorLocation, 0.8f);
 		
 		// 绘制
-		glBindVertexArray(VAO);
+		ourShader.use();
+		glBindVertexArray ( VAO );
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// 切换 back 和 front buffer
@@ -146,44 +118,20 @@ int main()
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shaderProgram);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
+
 	return 0;
 }
+
 
 
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
-	}
-}
-
-void fprintShaderInfo(int shader)
-{
-	int success;
-	char infoLog[512];
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-}
-
-void fprintShaderProgramInfo(int shaderProgram)
-{
-	int success;
-	char infoLog[512];
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
+		glfwSetWindowShouldClose(window, true);
 	}
 }
 
