@@ -35,8 +35,5 @@
     <None Include="Shaders\vertex.vs">
       <Filter>Shader</Filter>
     </None>
-    <None Include=".editorconfig">
-      <Filter>Sources</Filter>
-    </None>
   </ItemGroup>
 </Project>

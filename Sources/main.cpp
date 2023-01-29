@@ -59,42 +59,101 @@ int main()
 	
 	// 绘制内容
 	float vertices[] = {
-		//位置			//颜色
-		-0.5f,-0.5f,0.0f,1.0f,0.0f,0.0f,
-		0.5f,-0.5f,0.0f,0.0f,1.0f,0.0f,
-		0.0f,0.5f,0.0f,0.0f,0.0f,1.0f
+		//位置				//颜色			  // 纹理坐标	
+		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	// 右上
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,	// 右下
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,	// 左下
+		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,	// 左上
 	};
 
-	// 设置BUFFER和顶点数组
-	unsigned int VAO, VBO;
+	// 索引数组 画矩形
+	unsigned int indices[] = {
+		0,1,3,// 第一个三角形
+		1,2,3// 第二个三角形
+	};
+
+	// 设置BUFFER VBO、 顶点数组 VAO 和 索引数组 EBO
+	unsigned int VAO, VBO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	// EBO绑定 要在VAO之后
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	
 	// 链接顶点属性		 第0号attribute，3个数据，float类型，x，步长，初始偏移
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);// 第0个vAttrib激活
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);// 第1个vAttrib激活
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);// 第0个vAttrib激活，pos
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);// 第1个vAttrib激活，color
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);// 第2个vAttrib激活，texcoord
+
+	glBindVertexArray(0);
 
 	glEnable(GL_DEPTH_TEST);
 
-	// 纹理
-	int width , height , nrChannels;
+	// 纹理对象
+	unsigned int texture1;
+	glGenTextures(1 , &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	// 设置环绕、过滤方式
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// 纹理图像
+	int width, height, nrChannels;
 	unsigned char* data = stbi_load("Resources/Textures/container.jpg", &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		//x,x,读进来是什么通道，x,x,x,源文件是什么通道
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
 	
-	unsigned int texture;
-	glGenTextures(1 , &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	unsigned int texture2;
+	glGenTextures(1 , &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+	// 设置环绕、过滤方式
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// 纹理图像
+	stbi_set_flip_vertically_on_load(true);
+	data = stbi_load("Resources/Textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		//x,x,读进来是什么通道，x,x,x,源文件是什么通道
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
+	// 指定texture对应的纹理单元
+	ourShader.use();
+	ourShader.setInt("texture1", 0);
+	ourShader.setInt("texture2", 1);
+
+
 
 	// 使窗口循环响应事件
-	while ( !glfwWindowShouldClose ( window ) )
+	while (!glfwWindowShouldClose (window))
 	{
 		processInput(window);
 	
@@ -102,14 +161,19 @@ int main()
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// 访问uniform变量
-		//int vertexColorLocation = glGetUniformLocation(ourShader.ID, "horizonOffset");
-		//glUniform1f(vertexColorLocation, 0.8f);
+		// 绑定前先激活
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+
+		float a = glfwGetTime();
+		ourShader.setFloat("aMix", sinf(a)/2+0.5f);
 		
 		// 绘制
-		ourShader.use();
-		glBindVertexArray ( VAO );
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(VAO);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		// 切换 back 和 front buffer
 		glfwSwapBuffers(window);

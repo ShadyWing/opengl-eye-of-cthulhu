@@ -150,7 +150,6 @@
     <ClCompile Include="Sources\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".editorconfig" />
     <None Include="Shaders\fragment.fs" />
     <None Include="Shaders\vertex.vs" />
   </ItemGroup>
