@@ -29,10 +29,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\fragment.fs">
+    <None Include="Shaders\fragment.frag">
       <Filter>Shader</Filter>
     </None>
-    <None Include="Shaders\vertex.vs">
+    <None Include="Shaders\vertex.vert">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

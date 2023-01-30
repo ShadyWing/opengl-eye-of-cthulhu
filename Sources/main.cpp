@@ -6,7 +6,6 @@
 
 #include <iostream>
 
-
 void framebuffer_size_callback(GLFWwindow*, int width, int height);
 void processInput(GLFWwindow* window);
 
@@ -14,9 +13,10 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 
 
-
 int main()
 {
+	//---设置opengl---//
+
 	// 初始化glfw，和glfwTerminate配对
 	glfwInit();
 
@@ -51,11 +51,8 @@ int main()
 
 	// 在窗口内的可视范围
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-
-
-	// 设置shader
-	Shader ourShader("Shaders/vertex.vs", "Shaders/fragment.fs");
+	
+	//---绘制---//
 	
 	// 绘制内容
 	float vertices[] = {
@@ -66,10 +63,10 @@ int main()
 		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,	// 左上
 	};
 
-	// 索引数组 画矩形
+	// 索引数组
 	unsigned int indices[] = {
-		0,1,3,// 第一个三角形
-		1,2,3// 第二个三角形
+		0, 1, 3,	// 第一个三角形
+		1, 2, 3,	// 第二个三角形
 	};
 
 	// 设置BUFFER VBO、 顶点数组 VAO 和 索引数组 EBO
@@ -85,7 +82,6 @@ int main()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	
 	// 链接顶点属性		 第0号attribute，3个数据，float类型，x，步长，初始偏移
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);// 第0个vAttrib激活，pos
@@ -94,12 +90,13 @@ int main()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);// 第2个vAttrib激活，texcoord
 
+	// 链接顶点属性之后
 	glBindVertexArray(0);
 
 	glEnable(GL_DEPTH_TEST);
 
 	// 纹理对象
-	unsigned int texture1;
+	unsigned int texture1, texture2;
 	glGenTextures(1 , &texture1);
 	glBindTexture(GL_TEXTURE_2D, texture1);
 	// 设置环绕、过滤方式
@@ -109,6 +106,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// 纹理图像
 	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load("resources/textures/container.jpg", &width, &height, &nrChannels, 0);
 	if (data)
 	{
@@ -122,7 +120,6 @@ int main()
 	}
 	stbi_image_free(data);
 	
-	unsigned int texture2;
 	glGenTextures(1 , &texture2);
 	glBindTexture(GL_TEXTURE_2D, texture2);
 	// 设置环绕、过滤方式
@@ -131,7 +128,6 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// 纹理图像
-	stbi_set_flip_vertically_on_load(true);
 	data = stbi_load("resources/textures/awesomeface.png", &width, &height, &nrChannels, 0);
 	if (data)
 	{
@@ -145,11 +141,12 @@ int main()
 	}
 	stbi_image_free(data);
 
+	// 设置shader
+	Shader ourShader("Shaders/vertex.vert", "Shaders/fragment.frag");
 	// 指定texture对应的纹理单元
 	ourShader.use();
 	ourShader.setInt("texture1", 0);
 	ourShader.setInt("texture2", 1);
-
 
 
 	// 使窗口循环响应事件
@@ -182,13 +179,13 @@ int main()
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	return 0;
 }
-
 
 
 void processInput(GLFWwindow* window)

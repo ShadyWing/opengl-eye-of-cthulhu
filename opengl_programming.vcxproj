@@ -150,8 +150,8 @@
     <ClCompile Include="Sources\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\fragment.fs" />
-    <None Include="Shaders\vertex.vs" />
+    <None Include="Shaders\fragment.frag" />
+    <None Include="Shaders\vertex.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
