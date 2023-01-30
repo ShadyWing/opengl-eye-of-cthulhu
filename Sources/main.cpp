@@ -3,6 +3,9 @@
 
 #include <myinclude/shader.h>
 #include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
@@ -52,11 +55,12 @@ int main()
 	// 在窗口内的可视范围
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	
+
 	//---绘制---//
 	
 	// 绘制内容
 	float vertices[] = {
-		//位置				//颜色			  // 纹理坐标	
+		// 位置				// 颜色			  // 纹理坐标	
 		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	// 右上
 		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,	// 右下
 		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,	// 左下
@@ -148,6 +152,7 @@ int main()
 	ourShader.setInt("texture1", 0);
 	ourShader.setInt("texture2", 1);
 
+	
 
 	// 使窗口循环响应事件
 	while (!glfwWindowShouldClose (window))
@@ -166,10 +171,29 @@ int main()
 
 		float a = glfwGetTime();
 		ourShader.setFloat("aMix", sinf(a)/2+0.5f);
-		
+
+		// 变换矩阵，顺着写，逆着变换
+		glm::mat4 trans;
+		trans = glm::translate(trans, glm::vec3(1.0f, 0.0f, 0.0f));
+		trans = glm::rotate(trans, a, glm::vec3(0.0f, 0.0f, 1.0f));
+		//trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+		unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+		//x，个数，转置，glm转换glsl
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 		// 绘制
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		// 变换矩阵，顺着写，逆着变换
+		trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, glm::vec3(-1.0f, 1.0f, 0.0f));
+		//trans = glm::rotate(trans, a, glm::vec3(0.0f, 0.0f, 1.0f));
+		trans = glm::scale(trans, glm::vec3(sinf(a) / 2 + 0.5f, sinf(a) / 2 + 0.5f, sinf(a) / 2 + 0.5f));
+		transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+		//x，个数，转置，glm转换glsl
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+		// 绘制
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		// 切换 back 和 front buffer
