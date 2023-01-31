@@ -60,17 +60,68 @@ int main()
 	
 	// 绘制内容
 	float vertices[] = {
-		// 位置				// 颜色			  // 纹理坐标	
-		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	// 右上
-		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,	// 右下
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,	// 左下
-		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,	// 左上
+		// 位置				  // 纹理坐标	
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
 
 	// 索引数组
 	unsigned int indices[] = {
 		0, 1, 3,	// 第一个三角形
 		1, 2, 3,	// 第二个三角形
+	};
+
+	// 方块摆位
+	glm::vec3 cubePositions[] = {
+		glm::vec3( 0.0f,  0.0f,  0.0f),
+		glm::vec3( 2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3( 2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3( 1.3f, -2.0f, -2.5f),
+		glm::vec3( 1.5f,  2.0f, -2.5f),
+		glm::vec3( 1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
 	// 设置BUFFER VBO、 顶点数组 VAO 和 索引数组 EBO
@@ -87,12 +138,10 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// 链接顶点属性		 第0号attribute，3个数据，float类型，x，步长，初始偏移
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);// 第0个vAttrib激活，pos
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);// 第1个vAttrib激活，color
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);// 第2个vAttrib激活，texcoord
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);// 第1个vAttrib激活，texcoord
 
 	// 链接顶点属性之后
 	glBindVertexArray(0);
@@ -152,7 +201,6 @@ int main()
 	ourShader.setInt("texture1", 0);
 	ourShader.setInt("texture2", 1);
 
-	
 
 	// 使窗口循环响应事件
 	while (!glfwWindowShouldClose (window))
@@ -169,32 +217,29 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
-		float a = glfwGetTime();
-		ourShader.setFloat("aMix", sinf(a)/2+0.5f);
+		// model变换-view变换-projection变换
+		glm::mat4 view;
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+		ourShader.setMat4("view", view);
 
-		// 变换矩阵，顺着写，逆着变换
-		glm::mat4 trans;
-		trans = glm::translate(trans, glm::vec3(1.0f, 0.0f, 0.0f));
-		trans = glm::rotate(trans, a, glm::vec3(0.0f, 0.0f, 1.0f));
-		//trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
-		unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
-		//x，个数，转置，glm转换glsl
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-		// 绘制
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(45.0f), float(SCR_WIDTH / SCR_HEIGHT), 0.1f, 100.0f);
+		ourShader.setMat4("projection", projection);
+
 		glBindVertexArray(VAO);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		for (unsigned int i = 0; i < 10;i++)
+		{
+			glm::mat4 model;
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.0f * i;
+			model = glm::rotate(model, glm::radians(angle+(float)glfwGetTime()*100), glm::vec3(1.0f, 0.3f, 0.5f));
+			ourShader.setMat4("model", model);
 
-		// 变换矩阵，顺着写，逆着变换
-		trans = glm::mat4(1.0f);
-		trans = glm::translate(trans, glm::vec3(-1.0f, 1.0f, 0.0f));
-		//trans = glm::rotate(trans, a, glm::vec3(0.0f, 0.0f, 1.0f));
-		trans = glm::scale(trans, glm::vec3(sinf(a) / 2 + 0.5f, sinf(a) / 2 + 0.5f, sinf(a) / 2 + 0.5f));
-		transformLoc = glGetUniformLocation(ourShader.ID, "transform");
-		//x，个数，转置，glm转换glsl
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-		// 绘制
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
 		// 切换 back 和 front buffer
 		glfwSwapBuffers(window);
