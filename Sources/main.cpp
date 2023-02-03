@@ -18,6 +18,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 unsigned int loadImageToTexture(const char* imagePath);
+void initLights(Shader shader);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
@@ -31,7 +32,8 @@ float lastX = float(SCR_WIDTH) / 2.0f;
 float lastY = float(SCR_HEIGHT) / 2.0f;
 float fov = 45.0f;
 
-glm::vec3 lightPos(1.7f, 1.0f, 0.3f);
+glm::vec3 lightPos( 1.7f,  1.0f,  0.3f); // 点光
+glm::vec3 lightDir(-1.0f, -1.0f,  1.0f); // 平行光
 
 
 int main()
@@ -123,12 +125,6 @@ int main()
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f, 
 	};
 
-	// 索引数组
-	unsigned int indices[] = {
-		0, 1, 3,	// 第一个三角形
-		1, 2, 3,	// 第二个三角形
-	};
-
 	// 方块摆位
 	glm::vec3 cubePositions[] = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -187,6 +183,7 @@ int main()
 	boxShader.setInt("material.diffuse", 0);
 	boxShader.setInt("material.specular", 1);
 	boxShader.setInt("material.normal", 2);
+
 	
 	// 使窗口循环响应事件
 	while (!glfwWindowShouldClose (window))
@@ -202,15 +199,8 @@ int main()
 
 		boxShader.use();
 
-		boxShader.setVec3("viewPos", camera.Position);
+		initLights(boxShader);
 
-		boxShader.setVec3("material.specular", glm::vec3(1.0f));
-		boxShader.setFloat("material.shininess", 128.0f);
-
-		boxShader.setVec3("light.position", lightPos);
-		boxShader.setVec3("light.ambient", glm::vec3(0.2f));
-		boxShader.setVec3("light.diffuse", glm::vec3(1.0f));
-		boxShader.setVec3("light.specular", glm::vec3(1.0f));
 		// model变换-view变换-projection变换 / 模型变换-镜头变换-投影变换
 		glm::mat4 view = camera.GetViewMatrix();
 		boxShader.setMat4("view", view);
@@ -242,7 +232,7 @@ int main()
 		lightShader.use();
 		glm::mat4 model;
 		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.5f));
+		model = glm::scale(model, glm::vec3(0.25f));
 		lightShader.setMat4("model", model);
 		lightShader.setMat4("view", view);
 		lightShader.setMat4("projection", projection);
@@ -357,4 +347,30 @@ unsigned int loadImageToTexture(const char* imagePath)
 	stbi_image_free(data);
 	
 	return texID;
+}
+
+void initLights(Shader shader)
+{
+	shader.setVec3("viewPos", camera.Position);
+	
+	shader.setVec3("material.specular", glm::vec3(1.0f));
+	shader.setFloat("material.shininess", 128.0f);
+
+	// dirlight
+	shader.setVec3("dirLight.direction", lightDir);
+	shader.setVec3("dirLight.ambient", glm::vec3(0.2f));
+	shader.setVec3("dirLight.diffuse", glm::vec3(0.5f));
+	shader.setVec3("dirLight.specular", glm::vec3(0.5f));
+	shader.setFloat("dirLight.constant", 1.0f);
+	shader.setFloat("dirLight.linear", 0.09f);
+	shader.setFloat("dirLight.quadratic", 0.032f);
+
+	// pointlight01
+	shader.setVec3("light.position", lightPos);
+	shader.setVec3("light.ambient", glm::vec3(0.2f));
+	shader.setVec3("light.diffuse", glm::vec3(0.8f,0.3f,0.1f));
+	shader.setVec3("light.specular", glm::vec3(1.0f));
+	shader.setFloat("light.constant", 1.0f);
+	shader.setFloat("light.linear", 0.09f);
+	shader.setFloat("light.quadratic", 0.032f);
 }
