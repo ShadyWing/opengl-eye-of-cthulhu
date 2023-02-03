@@ -154,6 +154,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\fragment.frag" />
+    <None Include="Shaders\lightFrag.frag" />
+    <None Include="Shaders\lightVert.vert" />
     <None Include="Shaders\vertex.vert" />
   </ItemGroup>
   <ItemGroup>
