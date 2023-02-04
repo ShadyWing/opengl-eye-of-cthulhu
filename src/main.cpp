@@ -1,13 +1,17 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 
-#include <myinclude/shader.h>
-#include <myinclude/camera.h>
-
 #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+
+#include <myinclude/shader.h>
+#include <myinclude/camera.h>
+#include <myinclude/model.h>
+#include <myinclude/VAO.h>
 
 #include <iostream>
 
@@ -17,7 +21,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 unsigned int loadImageToTexture(const char* imagePath);
-void initLights(Shader shader);
+void initLights(Shader& shader);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
@@ -25,7 +29,7 @@ const unsigned int SCR_HEIGHT = 800;
 float deltaTime = 0.0f; // 当前帧与渲染上一帧的时间差
 float lastFrame = 0.0f; // 上一帧的时间
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 bool firstMouse = true;
 float lastX = float(SCR_WIDTH) / 2.0f;
 float lastY = float(SCR_HEIGHT) / 2.0f;
@@ -51,7 +55,7 @@ int main()
 #endif
 
 	// 创建窗口 x,x,x,全屏
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "firstWindow", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "importModel", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -78,6 +82,7 @@ int main()
 
 	//---绘制---//
 
+	glm::vec3 boxColor(1.0f);
 	// 绘制内容
 	float vertices[] = {
 		// 位置				  // 纹理坐标	   // 法向
@@ -139,6 +144,9 @@ int main()
 	};
 
 	// 设置BUFFER VBO、 顶点数组 VAO 和 索引数组 EBO
+	//VAO boxVAO;
+	//VBO boxVBO(vertices[0]);
+
 	unsigned int boxVAO, VBO;
 	glGenVertexArrays(1, &boxVAO);
 	glGenBuffers(1, &VBO);
@@ -173,6 +181,9 @@ int main()
 	unsigned int specularMap = loadImageToTexture("resources/textures/container2_specular.png");
 	unsigned int normalMap = loadImageToTexture("resources/textures/container2_normal.png");
 
+	std::string backpackPath = "resources/models/backpack/backpack.obj";
+	std::string housePath = "resources/models/forest_house/forest_house.fbx";
+	
 	// 设置shader
 	Shader boxShader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
 	Shader lightShader("resources/shaders/lightVert.vert", "resources/shaders/lightFrag.frag");
@@ -183,6 +194,13 @@ int main()
 	boxShader.setInt("material.specular", 1);
 	boxShader.setInt("material.normal", 2);
 
+	// 在stbi反转导入之后
+	Shader backpackShader("resources/models/backpack/backpack.vert", "resources/models/backpack/backpack.frag");
+	Model backpackModel(housePath.c_str(), 0);
+
+	Shader houseShader("resources/models/backpack/backpack.vert", "resources/models/backpack/backpack.frag");
+	Model houseModel(backpackPath.c_str());
+
 
 	// 使窗口循环响应事件
 	while (!glfwWindowShouldClose(window))
@@ -190,6 +208,7 @@ int main()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
 		processInput(window);
 
 		// 对 ColorBuffer 设定、清空
@@ -220,9 +239,13 @@ int main()
 		for (unsigned int i = 0; i < 10;i++)
 		{
 			glm::mat4 model;
-			model = glm::translate(model, cubePositions[i]);
+			glm::mat4 translate;
+			glm::mat4 rotate;
+			translate = glm::translate(translate, cubePositions[i]);
 			float angle = 20.0f * i;
-			model = glm::rotate(model, glm::radians(angle + (float)glfwGetTime() * 20), glm::vec3(1.0f, 0.3f, 0.5f));
+			//rotate = glm::rotate(model, glm::radians(angle + (float)glfwGetTime() * 20), glm::vec3(1.0f, 0.3f, 0.5f));
+			rotate = glm::toMat4(glm::angleAxis(glm::radians(angle + (float)glfwGetTime() * 20), glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f))));
+			model = translate * rotate;
 			boxShader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -240,6 +263,13 @@ int main()
 		glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
+		backpackShader.use();
+		initLights(backpackShader);
+		backpackModel.scale(glm::vec3(0.2f));
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		backpackModel.Draw(backpackShader, camera);
+		glDisable(GL_BLEND);
 
 		// 切换 back 和 front buffer
 		glfwSwapBuffers(window);
@@ -350,8 +380,10 @@ unsigned int loadImageToTexture(const char* imagePath)
 	return texID;
 }
 
-void initLights(Shader shader)
+void initLights(Shader& shader)
 {
+	shader.setBool("enableLight", true);
+
 	shader.setVec3("viewPos", camera.Position);
 
 	shader.setVec3("material.specular", glm::vec3(1.0f));

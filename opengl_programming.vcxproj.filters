@@ -20,6 +20,18 @@
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\mesh.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\model.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VBO.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VAO.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\fragment.frag">
@@ -32,6 +44,12 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="resources\shaders\vertex.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="resources\models\backpack\backpack.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="resources\models\backpack\backpack.vert">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

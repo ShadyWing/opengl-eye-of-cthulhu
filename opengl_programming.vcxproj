@@ -81,7 +81,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\codes\.dependencies\opengllib\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\codes\.dependencies\opengllib\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\codes\.dependencies\opengllib\lib;D:\codes\.dependencies\opengllib\dll;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -127,7 +127,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,9 +151,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\camera.h" />
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\mesh.h" />
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\model.h" />
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h" />
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VAO.h" />
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VBO.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\models\backpack\backpack.frag" />
+    <None Include="resources\models\backpack\backpack.vert" />
     <None Include="resources\shaders\fragment.frag" />
     <None Include="resources\shaders\lightFrag.frag" />
     <None Include="resources\shaders\lightVert.vert" />
