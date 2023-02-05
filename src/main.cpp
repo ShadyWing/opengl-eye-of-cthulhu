@@ -18,18 +18,17 @@
 void framebuffer_size_callback(GLFWwindow*, int width, int height);
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, Camera& camera);
 
 unsigned int loadImageToTexture(const char* imagePath);
-void initLights(Shader& shader);
+void initLights(Shader& shader, Camera& camera);
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 1280;
+const unsigned int SCR_HEIGHT = 720;
 
 float deltaTime = 0.0f; // 当前帧与渲染上一帧的时间差
 float lastFrame = 0.0f; // 上一帧的时间
 
-Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 bool firstMouse = true;
 float lastX = float(SCR_WIDTH) / 2.0f;
 float lastY = float(SCR_HEIGHT) / 2.0f;
@@ -37,7 +36,6 @@ float lastY = float(SCR_HEIGHT) / 2.0f;
 glm::vec3 lightPos(1.7f, 1.0f, 0.3f); // 点光
 glm::vec3 lightColor(0.8f, 0.3f, 0.1f);	 // 点光色
 glm::vec3 lightDir(-1.0f, -1.0f, 1.0f); // 平行光
-
 
 int main()
 {
@@ -67,9 +65,9 @@ int main()
 	// 设定窗口内容适应拖拽
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	// 设定鼠标输入
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetScrollCallback(window, scroll_callback);
 	// 加载 GLAD 使opengl正常工作
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -82,7 +80,6 @@ int main()
 
 	//---绘制---//
 
-	glm::vec3 boxColor(1.0f);
 	// 绘制内容
 	float vertices[] = {
 		// 位置				  // 纹理坐标	   // 法向
@@ -143,47 +140,28 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
-	// 设置BUFFER VBO、 顶点数组 VAO 和 索引数组 EBO
-	//VAO boxVAO;
-	//VBO boxVBO(vertices[0]);
+	// 设置BUFFER
+	std::vector<float> num(std::begin(vertices), std::end(vertices));
+	VBO VBO(num);
 
-	unsigned int boxVAO, VBO;
-	glGenVertexArrays(1, &boxVAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(boxVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// 链接顶点属性		 第0号attribute，3个数据，float类型，x，步长，初始偏移
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);// 第0个vAttrib激活，pos
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);// 第1个vAttrib激活，texcoord
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-	glEnableVertexAttribArray(2);// 第2个vAttrib激活，normal
-
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO);
-	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);// 第0个vAttrib激活，pos
-
-	// 链接顶点属性之后
-	glBindVertexArray(0);
-
-	glEnable(GL_DEPTH_TEST);
+	VAO boxVAO;
+	boxVAO.bind();
+	boxVAO.linkAttrib(VBO, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0);
+	boxVAO.linkAttrib(VBO, 1, 2, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	boxVAO.linkAttrib(VBO, 2, 3, GL_FLOAT, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	boxVAO.unBind();
+	
+	VAO lightVAO;
+	lightVAO.bind();
+	lightVAO.linkAttrib(VBO, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0);
+	lightVAO.unBind();
 
 	// 纹理对象
 	stbi_set_flip_vertically_on_load(true);
 	unsigned int diffuseMap = loadImageToTexture("resources/textures/container2.png");
 	unsigned int specularMap = loadImageToTexture("resources/textures/container2_specular.png");
-	unsigned int normalMap = loadImageToTexture("resources/textures/container2_normal.png");
+	//unsigned int normalMap = loadImageToTexture("resources/textures/container2_normal.png");
 
-	std::string backpackPath = "resources/models/backpack/backpack.obj";
-	std::string housePath = "resources/models/forest_house/forest_house.fbx";
-	
 	// 设置shader
 	Shader boxShader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
 	Shader lightShader("resources/shaders/lightVert.vert", "resources/shaders/lightFrag.frag");
@@ -194,64 +172,69 @@ int main()
 	boxShader.setInt("material.specular", 1);
 	boxShader.setInt("material.normal", 2);
 
-	// 在stbi反转导入之后
-	Shader backpackShader("resources/models/backpack/backpack.vert", "resources/models/backpack/backpack.frag");
-	Model backpackModel(housePath.c_str(), 0);
+	std::string backpackPath = "resources/models/backpack/backpack.obj";
+	std::string housePath = "resources/models/forest_house/forest_house.fbx";
 
+	// 在stbi设置上下反转之后
 	Shader houseShader("resources/models/backpack/backpack.vert", "resources/models/backpack/backpack.frag");
-	Model houseModel(backpackPath.c_str());
+	Model houseModel(housePath.c_str(), eNULL);
 
+	//Shader backpackShader("resources/models/backpack/backpack.vert", "resources/models/backpack/backpack.frag");
+	//Model backpackModel(backpackPath.c_str());
+
+	Camera camera(window, (float)SCR_WIDTH, (float)SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
+
+	glEnable(GL_DEPTH_TEST);
 
 	// 使窗口循环响应事件
 	while (!glfwWindowShouldClose(window))
 	{
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+		processInput(window, camera);
 
-		processInput(window);
+		camera.processInput(window);
 
 		// 对 ColorBuffer 设定、清空
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		boxShader.use();
+		// model变换-view变换-projection变换 / 模型变换-镜头变换-投影变换
+		glm::mat4 view = camera.getViewMatrix();
+		glm::mat4 projection = camera.getProjectionMatrix();
 
-		initLights(boxShader);
+		// 箱子
+		boxShader.use();
+		boxVAO.bind();
 
 		// 绑定前先激活
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specularMap);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, normalMap);
 
-		// model变换-view变换-projection变换 / 模型变换-镜头变换-投影变换
-		glm::mat4 view = camera.GetViewMatrix();
+		initLights(boxShader, camera);
 		boxShader.setMat4("view", view);
-
-		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		boxShader.setMat4("projection", projection);
 
-		glBindVertexArray(boxVAO);
 		for (unsigned int i = 0; i < 10;i++)
 		{
 			glm::mat4 model;
 			glm::mat4 translate;
 			glm::mat4 rotate;
+
 			translate = glm::translate(translate, cubePositions[i]);
 			float angle = 20.0f * i;
-			//rotate = glm::rotate(model, glm::radians(angle + (float)glfwGetTime() * 20), glm::vec3(1.0f, 0.3f, 0.5f));
 			rotate = glm::toMat4(glm::angleAxis(glm::radians(angle + (float)glfwGetTime() * 20), glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f))));
+
 			model = translate * rotate;
 			boxShader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		boxVAO.unBind();
 
 		lightShader.use();
+		lightVAO.bind();
+
 		lightShader.setVec3("lightColor", lightColor);
 		glm::mat4 model;
 		model = glm::translate(model, lightPos);
@@ -260,15 +243,15 @@ int main()
 		lightShader.setMat4("view", view);
 		lightShader.setMat4("projection", projection);
 
-		glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+		lightVAO.unBind();
 
-		backpackShader.use();
-		initLights(backpackShader);
-		backpackModel.scale(glm::vec3(0.2f));
+		houseShader.use();
+		initLights(houseShader, camera);
+		houseModel.scale(glm::vec3(0.2f));
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		backpackModel.Draw(backpackShader, camera);
+		houseModel.Draw(houseShader, camera);
 		glDisable(GL_BLEND);
 
 		// 切换 back 和 front buffer
@@ -276,9 +259,9 @@ int main()
 		glfwPollEvents();
 	}
 
-	glDeleteVertexArrays(1, &boxVAO);
-	glDeleteVertexArrays(1, &lightVAO);
-	glDeleteBuffers(1, &VBO);
+	boxVAO.Delete();
+	lightVAO.Delete();
+	VBO.Delete();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -286,29 +269,22 @@ int main()
 	return 0;
 }
 
-
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, Camera& camera)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		camera.isDashing = true;
-	else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-		camera.isDashing = false;
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera.ProcessKeyboard(UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera.ProcessKeyboard(DOWN, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+	{
+		camera.enableOp = false;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+	{
+		camera.enableOp = true;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -335,12 +311,12 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset);
+	//camera.processMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	camera.ProcessMouseScroll(static_cast<float>(yoffset));
+	//camera.processMouseScroll(static_cast<float>(yoffset));
 }
 
 unsigned int loadImageToTexture(const char* imagePath)
@@ -380,11 +356,11 @@ unsigned int loadImageToTexture(const char* imagePath)
 	return texID;
 }
 
-void initLights(Shader& shader)
+void initLights(Shader& shader, Camera& camera)
 {
 	shader.setBool("enableLight", true);
 
-	shader.setVec3("viewPos", camera.Position);
+	shader.setVec3("viewPos", camera.position);
 
 	shader.setVec3("material.specular", glm::vec3(1.0f));
 	shader.setFloat("material.shininess", 128.0f);

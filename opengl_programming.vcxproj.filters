@@ -14,9 +14,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\camera.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -30,6 +27,12 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VAO.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\camera.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\EBO.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="src\stb_image.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\.dependencies\opengllib\include\myinclude\camera.cpp">
+      <Filter>Headers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

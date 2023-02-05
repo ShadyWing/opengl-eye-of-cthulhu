@@ -121,4 +121,5 @@ void main()
 	float alpha = texture(material.texture_alpha1, TexCoord).g;
 
 	FragColor = vec4(result, alpha);
+	//FragColor = vec4(vec3(gl_FragCoord.z), alpha);
 }

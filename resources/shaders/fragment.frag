@@ -57,6 +57,8 @@ uniform Material material;
 uniform PointLight light;
 uniform DirectionalLight dirLight;
 
+uniform bool enableLight = false;
+
 vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
 	vec3 lightDir = normalize(-light.direction);
@@ -98,12 +100,16 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 void main()
 {
-	vec3 normal = normalize(Normal);
-	vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 result = texture(material.diffuse, TexCoord).rgb;
+	if(enableLight)
+	{
+		vec3 normal = normalize(Normal);
+		vec3 viewDir = normalize(viewPos - FragPos);
 
-	vec3 result = calcDirectionalLight(dirLight, normal, FragPos, viewDir);
+		result = calcDirectionalLight(dirLight, normal, FragPos, viewDir);
 	
-	result += calcPointLight(light, normal, FragPos, viewDir);
+		result += calcPointLight(light, normal, FragPos, viewDir);
+	}
 
 	FragColor = vec4(result, 1.0);
 }
