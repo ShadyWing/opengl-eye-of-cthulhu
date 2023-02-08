@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\codes\.dependencies\opengllib\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\codes\OpenGL\opengl_programming\includes;D:\codes\.dependencies\opengllib\include;$(IncludePath)</IncludePath>
     <LibraryPath>D:\codes\.dependencies\opengllib\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,17 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\camera.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\EBO.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\mesh.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\model.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\texture.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VAO.h" />
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VBO.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\.dependencies\opengllib\include\myinclude\camera.cpp" />
+    <ClCompile Include="includes\myinclude\camera.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
@@ -173,6 +163,16 @@
     <None Include="resources\shaders\postprocess\sharpen.frag" />
     <None Include="resources\shaders\Unlit\unlitOpaque.frag" />
     <None Include="resources\shaders\vertex.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes\myinclude\camera.h" />
+    <ClInclude Include="includes\myinclude\EBO.h" />
+    <ClInclude Include="includes\myinclude\mesh.h" />
+    <ClInclude Include="includes\myinclude\model.h" />
+    <ClInclude Include="includes\myinclude\shader.h" />
+    <ClInclude Include="includes\myinclude\texture.h" />
+    <ClInclude Include="includes\myinclude\VAO.h" />
+    <ClInclude Include="includes\myinclude\VBO.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

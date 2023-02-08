@@ -23,32 +23,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\mesh.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\model.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VBO.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VAO.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\camera.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\EBO.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\texture.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\glad.c">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -58,7 +32,7 @@
     <ClCompile Include="src\stb_image.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\.dependencies\opengllib\include\myinclude\camera.cpp">
+    <ClCompile Include="includes\myinclude\camera.cpp">
       <Filter>Headers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -84,5 +58,31 @@
     <None Include="resources\shaders\postprocess\sharpen.frag">
       <Filter>Shader\postporcess</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes\myinclude\camera.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\EBO.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\mesh.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\model.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\shader.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\texture.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\VAO.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\myinclude\VBO.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
