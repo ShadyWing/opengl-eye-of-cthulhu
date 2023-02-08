@@ -81,7 +81,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\codes\.dependencies\opengllib\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\codes\.dependencies\opengllib\lib;D:\codes\.dependencies\opengllib\dll;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\codes\.dependencies\opengllib\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -155,22 +155,24 @@
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\mesh.h" />
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\model.h" />
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h" />
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\texture.h" />
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VAO.h" />
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\VBO.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="resources\models\backpack\backpack.frag" />
-    <None Include="resources\models\backpack\backpack.vert" />
-    <None Include="resources\shaders\fragment.frag" />
-    <None Include="resources\shaders\lightFrag.frag" />
-    <None Include="resources\shaders\lightVert.vert" />
-    <None Include="resources\shaders\vertex.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\.dependencies\opengllib\include\myinclude\camera.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\core.vert" />
+    <None Include="resources\shaders\Lit\transparent.frag" />
+    <None Include="resources\shaders\Lit\opaque.frag" />
+    <None Include="resources\shaders\postprocess\blur.frag" />
+    <None Include="resources\shaders\postprocess\sharpen.frag" />
+    <None Include="resources\shaders\Unlit\unlitOpaque.frag" />
+    <None Include="resources\shaders\vertex.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

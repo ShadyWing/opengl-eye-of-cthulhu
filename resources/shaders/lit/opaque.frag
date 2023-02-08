@@ -1,11 +1,11 @@
 #version 460 core
 
 struct Material{
+	vec3 baseColor;
 	sampler2D texture_diffuse1;
 	sampler2D texture_specular1;
 	sampler2D texture_normal1;
 	sampler2D texture_height1;
-	sampler2D texture_alpha1;
 	float shininess;
 };
 
@@ -48,20 +48,16 @@ struct SpotLight{
 	float quadratic;
 };
 
+out vec4 FragColor;
+
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
-
-out vec4 FragColor;
 
 uniform vec3 viewPos;
 uniform Material material;
 uniform PointLight light;
 uniform DirectionalLight dirLight;
-
-uniform bool enableLight = false;
-
-uniform sampler2D texture_diffuse1;
 
 vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
@@ -75,8 +71,6 @@ vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 	vec3 specular = light.specular * spec * texture(material.texture_specular1, TexCoord).rgb;
-
-	//vec3 norm = normalize(texture(material.normal, TexCoord).rgb * 2.0 - 1.0);
 
 	return (ambient + diffuse + specular);
 }
@@ -94,8 +88,6 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 	vec3 specular = light.specular * spec * texture(material.texture_specular1, TexCoord).rgb;
 
-	//vec3 norm = normalize(texture(material.normal, TexCoord).rgb * 2.0 - 1.0);
-
 	float distance = length(light.position - fragPos);
 	float intensity = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
 
@@ -105,21 +97,11 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 void main()
 {
 	vec3 result;
-	if(enableLight)
-	{
-		vec3 normal = normalize(Normal);
-		vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 normal = normalize(Normal);
+	vec3 viewDir = normalize(viewPos - FragPos);
 	
-		result = calcDirectionalLight(dirLight, normal, FragPos, viewDir);
-	
-		result += calcPointLight(light, normal, FragPos, viewDir);
-	}
-	else
-	{
-		result = texture(material.texture_diffuse1, TexCoord).rgb;
-	}
-	float alpha = texture(material.texture_alpha1, TexCoord).g;
+	result = calcDirectionalLight(dirLight, normal, FragPos, viewDir);
+	result += calcPointLight(light, normal, FragPos, viewDir);
 
-	FragColor = vec4(result, alpha);
-	//FragColor = vec4(vec3(gl_FragCoord.z), alpha);
+	FragColor = vec4(result, 1.0f);
 }

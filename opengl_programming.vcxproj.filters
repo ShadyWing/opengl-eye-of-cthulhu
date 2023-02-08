@@ -12,6 +12,15 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Shader\postporcess">
+      <UniqueIdentifier>{aeac6d1b-7f33-4af5-91ea-4f0d8571334c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\lit">
+      <UniqueIdentifier>{7f748539-92c4-49dd-97fc-4e26946d6968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\unlit">
+      <UniqueIdentifier>{7934c5c1-af33-4795-a9f1-e544d01bc9a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\shader.h">
@@ -35,26 +44,9 @@
     <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\EBO.h">
       <Filter>Headers</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="resources\shaders\fragment.frag">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="resources\shaders\lightFrag.frag">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="resources\shaders\lightVert.vert">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="resources\shaders\vertex.vert">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="resources\models\backpack\backpack.frag">
-      <Filter>Shader</Filter>
-    </None>
-    <None Include="resources\models\backpack\backpack.vert">
-      <Filter>Shader</Filter>
-    </None>
+    <ClInclude Include="..\..\.dependencies\opengllib\include\myinclude\texture.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\glad.c">
@@ -69,5 +61,28 @@
     <ClCompile Include="..\..\.dependencies\opengllib\include\myinclude\camera.cpp">
       <Filter>Headers</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\vertex.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="resources\shaders\Unlit\unlitOpaque.frag">
+      <Filter>Shader\unlit</Filter>
+    </None>
+    <None Include="resources\shaders\Lit\opaque.frag">
+      <Filter>Shader\lit</Filter>
+    </None>
+    <None Include="resources\shaders\Lit\transparent.frag">
+      <Filter>Shader\lit</Filter>
+    </None>
+    <None Include="resources\shaders\core.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="resources\shaders\postprocess\blur.frag">
+      <Filter>Shader\postporcess</Filter>
+    </None>
+    <None Include="resources\shaders\postprocess\sharpen.frag">
+      <Filter>Shader\postporcess</Filter>
+    </None>
   </ItemGroup>
 </Project>
