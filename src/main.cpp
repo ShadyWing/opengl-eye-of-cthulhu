@@ -484,12 +484,15 @@ unsigned int loadTexture(const char* imagePath)
 	if (data)
 	{
 		GLenum colorChannel;
-		if (nrChannels == 1)
-			colorChannel = GL_RED;
-		if (nrChannels == 3)
-			colorChannel = GL_RGB;
-		if (nrChannels == 4)
-			colorChannel = GL_RGBA;
+		switch (nrChannels) {
+		case 1:
+			colorChannel = GL_RED; break;
+		case 3:
+			colorChannel = GL_RGB; break;
+		case 4:
+			colorChannel = GL_RGBA; break;
+		default:break;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, texID);
 		//x,x,读进来是什么通道，x,x,x,源文件是什么通道

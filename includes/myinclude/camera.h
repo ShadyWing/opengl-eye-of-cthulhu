@@ -59,6 +59,8 @@ public:
 
 	void processMouseScroll(GLFWwindow* window, float yoffset);
 
+	// 整合键盘、鼠标移动、鼠标滚轮
+	// -----------------------
 	void processInput(GLFWwindow* window);
 
 private:

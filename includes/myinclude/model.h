@@ -275,13 +275,16 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 	unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrChannels, 0);
 	if (data)
 	{
-		GLenum colorChannel;
-		if (nrChannels == 1)
-			colorChannel = GL_RED;
-		if (nrChannels == 3)
-			colorChannel = GL_RGB;
-		if (nrChannels == 4)
-			colorChannel = GL_RGBA;
+		GLenum colorChannel; 
+		switch (nrChannels) {
+		case 1:
+			colorChannel = GL_RED; break;
+		case 3:
+			colorChannel = GL_RGB; break;
+		case 4:
+			colorChannel = GL_RGBA; break;
+		default:break;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		//x,x,读进来是什么通道，x,x,x,源文件是什么通道
