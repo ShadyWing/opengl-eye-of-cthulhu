@@ -63,6 +63,7 @@ void Camera::processKeyboard(GLFWwindow* window, float deltaTime)
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
+		mouseSensitivity = SENSITIVITY / 3.0f;
 		if (fov > 10)
 			fov -= deltaTime * 300.0;
 		if (fov <= 10)
@@ -70,6 +71,7 @@ void Camera::processKeyboard(GLFWwindow* window, float deltaTime)
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE)
 	{
+		mouseSensitivity = SENSITIVITY;
 		if (fov < FOV)
 			fov += deltaTime * 600.0;
 		if (fov >= FOV)

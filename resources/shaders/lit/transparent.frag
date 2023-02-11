@@ -48,6 +48,16 @@ struct SpotLight{
 	float quadratic;
 };
 
+const float offsetw = 1.0f / 1280.0f;
+const float offseth = 1.0f / 720.0f;
+
+vec2 offsets[9] = vec2[]
+(
+	vec2(-offsetw,  offseth), vec2( 0.0f,    offseth), vec2( offsetw,  offseth),
+	vec2(-offsetw,  0.0f),    vec2( 0.0f,    0.0f),    vec2( offsetw,  0.0f),
+	vec2(-offsetw, -offseth), vec2( 0.0f,   -offseth), vec2( offsetw, -offseth)
+);
+
 out vec4 FragColor;
 
 in vec2 TexCoord;

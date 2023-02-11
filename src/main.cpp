@@ -20,6 +20,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window, Camera& camera);
 unsigned int loadTexture(const char* imagePath);
+unsigned int loadCubemap(std::vector<std::string>& faces);
 void initLights(Shader& shader, Camera& camera);
 
 // 窗口设置
@@ -37,8 +38,11 @@ float lastY = float(SCR_HEIGHT) / 2.0f;
 
 // 光源设置
 glm::vec3 lightPos(1.7f, 1.0f, 0.3f); // 点光
-glm::vec3 lightColor(0.8f, 0.3f, 0.1f);	 // 点光色
+glm::vec3 lightColor(1.0f, 0.5f, 0.2f);	 // 点光色
 glm::vec3 lightDir(-1.0f, -1.0f, 1.0f); // 平行光
+
+// 盒子设置
+glm::vec3 boxPosition(-3.0f, 0.0f, 0.0f);
 
 int main()
 {
@@ -128,18 +132,6 @@ int main()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,  	// top-left
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,  	// bottom-left    
 	};
-	glm::vec3 boxPositions[] = {
-		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3( 2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3( 2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3( 1.3f, -2.0f, -2.5f),
-		glm::vec3( 1.5f,  2.0f, -2.5f),
-		glm::vec3( 1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
 	float pointLightVertices[] = {
 		// 位置				  
 		// Back face
@@ -195,6 +187,50 @@ int main()
 		 1.0f, -1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f,  1.0f, 1.0f,
 	};
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
 	
 	// 盒子VAO
 	VBO boxVBO(std::vector<float>(std::begin(boxVertices), std::end(boxVertices)));
@@ -217,16 +253,33 @@ int main()
 	screenVAO.linkAttrib(screenVBO, 0, 2, GL_FLOAT, 4 * sizeof(float), (void*)0);
 	screenVAO.linkAttrib(screenVBO, 1, 2, GL_FLOAT, 4 * sizeof(float), (void*)(2*sizeof(float)));
 	screenVAO.unBind();
-
+	// 天空盒VAO
+	VBO skyboxVBO(std::vector<float>(std::begin(skyboxVertices), std::end(skyboxVertices)));
+	VAO skyboxVAO;
+	skyboxVAO.bind();
+	skyboxVAO.linkAttrib(skyboxVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
+	skyboxVAO.unBind();
+	
 	// Texture path
 	std::string containerDiffPath = "resources/textures/container2.png";
 	std::string containerSpecPath = "resources/textures/container2_specular.png";
+	std::vector<std::string> skyboxDiffPath{
+		"resources/textures/skybox/right.jpg",
+		"resources/textures/skybox/left.jpg",
+		"resources/textures/skybox/top.jpg",
+		"resources/textures/skybox/bottom.jpg",
+		"resources/textures/skybox/front.jpg",
+		"resources/textures/skybox/back.jpg"
+	};
 	// Shader path
 	std::string vertPath = "resources/shaders/vertex.vert";
 	std::string corePath = "resources/shaders/core.vert";
+	std::string skyboxVertPath = "resources/shaders/skybox.vert";
 	std::string blurPath = "resources/shaders/postprocess/blur.frag";
 	std::string sharpenPath = "resources/shaders/postprocess/sharpen.frag";
 	std::string unlitOpaquePath = "resources/shaders/unlit/unlitOpaque.frag";
+	std::string unlitReflectPath = "resources/shaders/unlit/unlitReflect.frag";
+	std::string skyboxFragPath = "resources/shaders/unlit/skybox.frag";
 	std::string litOpaquePath = "resources/shaders/lit/opaque.frag";
 	std::string litTransparentPath = "resources/shaders/lit/transparent.frag";
 	// Model path
@@ -238,17 +291,24 @@ int main()
 	unsigned int diffuseMap = loadTexture(containerDiffPath.c_str());
 	unsigned int specularMap = loadTexture(containerSpecPath.c_str());
 	stbi_set_flip_vertically_on_load(false);
+	unsigned int skyboxMap = loadCubemap(skyboxDiffPath);
 
 	// 设置shader
 	// ---------
 	Shader boxShader(vertPath.c_str(), litOpaquePath.c_str());
+	Shader reflectShader(vertPath.c_str(), unlitReflectPath.c_str());
 	Shader lightShader(vertPath.c_str(), unlitOpaquePath.c_str());
 	Shader screenShader(corePath.c_str(), sharpenPath.c_str());
+	Shader skyboxShader(skyboxVertPath.c_str(), skyboxFragPath.c_str());
 	// boxShader
 	boxShader.bind();
 	boxShader.setInt("material.texture_diffuse1", 0);
 	boxShader.setInt("material.texture_specular1", 1);
 	boxShader.unBind();
+	// refelctShader
+	reflectShader.bind();
+	reflectShader.setInt("skybox", 0);
+	reflectShader.unBind();
 	// lighShader
 	lightShader.bind();
 	lightShader.setVec3("material.baseColor", lightColor);
@@ -257,6 +317,10 @@ int main()
 	screenShader.bind();
 	screenShader.setInt("iScreenTexture", 0);
 	screenShader.unBind();
+	// skyboxShader
+	skyboxShader.bind();
+	skyboxShader.setInt("skybox", 0);
+	skyboxShader.unBind();
 
 	// 导入模型
 	// -------
@@ -277,8 +341,8 @@ int main()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 	// Renderbuffer for depth and stencil
 	unsigned int rbo;
@@ -290,13 +354,13 @@ int main()
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+
 	// 生成相机
 	Camera camera(window, (float)SCR_WIDTH, (float)SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 
 	// OPENGL渲染设置
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	// 渲染循环
 	// ---------------
@@ -313,38 +377,51 @@ int main()
 		glClearColor(0.07f, 0.07f, 0.07f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// model变换-view变换-projection变换 / 模型变换-镜头变换-投影变换
+		// 变换矩阵
 		glm::mat4 projection = camera.getProjectionMatrix();
 		glm::mat4 view = camera.getViewMatrix();
+		glm::mat4 model;
+
+		// 进行后处理的渲染
+		// -------------
+		// 绑定Frambuffer进行渲染
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glClearColor(lightColor.r, lightColor.g, lightColor.b, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// 绘制箱子
 		boxShader.bind();
 		initLights(boxShader, camera);
 		boxShader.setMat4("projection", projection);
 		boxShader.setMat4("view", view);
-		for (unsigned int i = 0; i < 10;i++)
-		{
-			glm::mat4 model;
-			glm::mat4 translate;
-			glm::mat4 rotate;
-
-			translate = glm::translate(translate, boxPositions[i]);
-			float angle = 20.0f * i;
-			rotate = glm::toMat4(glm::angleAxis(glm::radians(angle + (float)glfwGetTime() * 20), glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f))));
-
-			model = translate * rotate;
-			boxShader.setMat4("model", model);
-
-			// 绘制前绑定
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, diffuseMap);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, specularMap);
-			boxVAO.bind();
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			boxVAO.unBind();
-		}
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, boxPosition);
+		model = glm::rotate(model, glm::radians((float)glfwGetTime() * 20), glm::vec3(1.0f, 0.3f, 0.5f));
+		boxShader.setMat4("model", model);
+		// 绘制前绑定
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
+		boxVAO.bind();
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		boxVAO.unBind();
 		boxShader.unBind();
+		
+		// 绘制反光箱子
+		reflectShader.bind();
+		reflectShader.setVec3("cameraPos", camera.position);
+		reflectShader.setMat4("projection", projection);
+		reflectShader.setMat4("view", view);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
+		model = glm::scale(model, glm::vec3(0.5f));
+		reflectShader.setMat4("model", model);
+		// 绘制前绑定
+		boxVAO.bind();
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		boxVAO.unBind();
+		reflectShader.unBind();
 
 		// 绘制房子
 		houseShader.bind();
@@ -361,20 +438,11 @@ int main()
 		//backpackModel.Draw(backpackShader, camera);
 		//backpackShader.unBind();
 
-
-		// 进行后处理的渲染
-		// ----
-		// 绑定Frambuffer进行渲染
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-		glClearColor(lightColor.r, lightColor.g, lightColor.b, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		// 渲染光源
 		lightShader.bind();
 		lightShader.setMat4("projection", projection);
 		lightShader.setMat4("view", view);
-		glm::mat4 model;
+		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.25f));
 		lightShader.setMat4("model", model);
@@ -383,15 +451,25 @@ int main()
 		lightVAO.unBind();
 		lightShader.unBind();
 
+		// 最后 绘制天空盒
+		glDepthFunc(GL_LEQUAL);
+		skyboxShader.bind();
+		skyboxShader.setMat4("projection", projection);
+		skyboxShader.setMat4("view", glm::mat4(glm::mat3(camera.getViewMatrix())));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxMap);
+		skyboxVAO.bind();
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		skyboxVAO.unBind();
+		glDepthFunc(GL_LESS);
+
+		// 渲染纹理Colorbuffer
+		// -------------
 		// 返回默认Frambuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		//glClearColor(0.07f, 0.07f, 0.07f, 1.0f);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		// 渲染纹理Colorbuffer
 		screenShader.bind();
 		screenVAO.bind();
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
@@ -411,10 +489,12 @@ int main()
 	boxVAO.Delete();
 	lightVAO.Delete();
 	screenVAO.Delete();
+	skyboxVAO.Delete();
 
 	boxVBO.Delete();
 	lightVBO.Delete();
 	screenVBO.Delete();
+	skyboxVBO.Delete();
 
 	// 关闭窗口
 	glfwDestroyWindow(window);
@@ -473,6 +553,35 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	//camera.processMouseScroll(static_cast<float>(yoffset));
 }
 
+void initLights(Shader& shader, Camera& camera)
+{
+	shader.setVec3("viewPos", camera.position);
+
+	shader.setFloat("material.shininess", 128.0f);
+
+	// dirlight
+	// --------
+	shader.setVec3("dirLight.direction", lightDir);
+	shader.setVec3("dirLight.ambient", glm::vec3(0.2f));
+	shader.setVec3("dirLight.diffuse", glm::vec3(0.7f));
+	shader.setVec3("dirLight.specular", glm::vec3(0.5f));
+	// 衰弱
+	shader.setFloat("dirLight.constant", 1.0f);
+	shader.setFloat("dirLight.linear", 0.09f);
+	shader.setFloat("dirLight.quadratic", 0.032f);
+
+	// pointlight01
+	// ------------
+	shader.setVec3("light.position", lightPos);
+	shader.setVec3("light.ambient", glm::vec3(0.2f));
+	shader.setVec3("light.diffuse", lightColor);
+	shader.setVec3("light.specular", glm::vec3(1.0f));
+	// 衰弱
+	shader.setFloat("light.constant", 1.0f);
+	shader.setFloat("light.linear", 0.09f);
+	shader.setFloat("light.quadratic", 0.032f);
+}
+
 unsigned int loadTexture(const char* imagePath)
 {
 	unsigned int texID;
@@ -499,9 +608,9 @@ unsigned int loadTexture(const char* imagePath)
 		glTexImage2D(GL_TEXTURE_2D, 0, colorChannel, width, height, 0, colorChannel, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		// 设置环绕、过滤方式
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 	else
@@ -515,27 +624,36 @@ unsigned int loadTexture(const char* imagePath)
 	return texID;
 }
 
-void initLights(Shader& shader, Camera& camera)
+unsigned int loadCubemap(std::vector<std::string>& faces)
 {
-	shader.setVec3("viewPos", camera.position);
+	unsigned int texID;
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texID);
 
-	shader.setFloat("material.shininess", 128.0f);
+	// 纹理图像
+	int width, height, nrChannels;
+	for (unsigned int i = 0;i < faces.size();i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+		else
+		{
+			std::cout << "Cubmap texture failed to load at path: " << faces[i] << std::endl;
+		}
+		stbi_image_free(data);
+	}
 
-	// dirlight
-	shader.setVec3("dirLight.direction", lightDir);
-	shader.setVec3("dirLight.ambient", glm::vec3(0.2f));
-	shader.setVec3("dirLight.diffuse", glm::vec3(0.7f));
-	shader.setVec3("dirLight.specular", glm::vec3(0.5f));
-	shader.setFloat("dirLight.constant", 1.0f);
-	shader.setFloat("dirLight.linear", 0.09f);
-	shader.setFloat("dirLight.quadratic", 0.032f);
+	// 设置环绕、过滤方式
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	// pointlight01
-	shader.setVec3("light.position", lightPos);
-	shader.setVec3("light.ambient", glm::vec3(0.2f));
-	shader.setVec3("light.diffuse", lightColor);
-	shader.setVec3("light.specular", glm::vec3(1.0f));
-	shader.setFloat("light.constant", 1.0f);
-	shader.setFloat("light.linear", 0.09f);
-	shader.setFloat("light.quadratic", 0.032f);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+	return texID;
 }
