@@ -20,7 +20,7 @@ public:
 		Delete();
 	}
 
-	void linkAttrib(VBO& VBO, GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, void* offset)
+	inline void linkAttrib(VBO& VBO, GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, void* offset)
 	{
 		VBO.bind();
 		// 链接顶点属性		 第x号attribute，x个数据，数据类型，x，步长，初始偏移
@@ -29,17 +29,17 @@ public:
 		VBO.unBind();
 	}
 
-	void bind()
+	inline void bind()
 	{
 		glBindVertexArray(ID);
 	}
 
-	void unBind()
+	inline void unBind()
 	{
 		glBindVertexArray(0);
 	}
 
-	void Delete()
+	inline void Delete()
 	{
 		glDeleteVertexArrays(1, &ID);
 	}

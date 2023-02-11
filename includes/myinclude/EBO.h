@@ -22,17 +22,17 @@ public:
 		Delete();
 	}
 
-	void bind()
+	inline void bind()
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
 	}
 
-	void unBind()
+	inline void unBind()
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	void Delete()
+	inline void Delete()
 	{
 		glDeleteBuffers(1, &ID);
 	}

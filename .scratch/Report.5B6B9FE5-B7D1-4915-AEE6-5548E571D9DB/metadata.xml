@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="urn:diagnosticshub-package-metadata-2-1">
+  <Tools>
+    <Tool Id="{96F1F3E8-F762-4CD2-8ED9-68EC25C2C722}">
+      <AcquireLink Type="none" />
+    </Tool>
+  </Tools>
+  <Content>
+    <Resource CompressionOption="norm" Id="{31B62BC2-1DA4-4E1B-9690-C0A2AD3820DE}" IsDirectoryOnDisk="false" Name="sc.user_aux.etl" ResourcePackageUriPrefix="31B62BC2-1DA4-4E1B-9690-C0A2AD3820DE" TimeAddedUTC="133205753457900370" Type="DiagnosticsHub.Resource.EtlFile" />
+  </Content>
+  <Metadata>
+    <Item Key="_BuildVersion">17.4.33102.2</Item>
+  </Metadata>
+</Package>

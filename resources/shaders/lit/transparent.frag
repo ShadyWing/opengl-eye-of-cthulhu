@@ -10,34 +10,38 @@ struct Material{
 };
 
 struct DirectionalLight{
-	vec3 direction;
+					//基准	偏移(必须是基准的倍数
+	vec3 direction;	//16	16
 
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
+	vec3 ambient;	//16	32
+	vec3 diffuse;	//16	48
+	vec3 specular;	//16	64
 
-	float constant;
-	float linear;
-	float quadratic;
+	float constant;	//4		80
+	float linear;	//4		84
+	float quadratic;//4		88
 };
 
 struct PointLight{
-	vec3 position;
+					//基准	偏移(必须是基准的倍数
+	vec3 position;	//16	96
 
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
+	vec3 ambient;	//16	112
+	vec3 diffuse;	//16	128
+	vec3 specular;	//16	144
 
-	float constant;
-	float linear;
-	float quadratic;
+	float constant;	//4		160
+	float linear;	//4		164
+	float quadratic;//4		168
 };
 
 struct SpotLight{
 	vec3 position;
 	vec3 direction;
-	float cutOff; // 光照范围角 余弦
-	float outerCutOff; // 柔边
+	// 光照范围角 余弦
+	float cutOff;
+	// 柔边
+	float outerCutOff;
 
 	vec3 ambient;
 	vec3 diffuse;
@@ -47,16 +51,6 @@ struct SpotLight{
 	float linear;
 	float quadratic;
 };
-
-const float offsetw = 1.0f / 1280.0f;
-const float offseth = 1.0f / 720.0f;
-
-vec2 offsets[9] = vec2[]
-(
-	vec2(-offsetw,  offseth), vec2( 0.0f,    offseth), vec2( offsetw,  offseth),
-	vec2(-offsetw,  0.0f),    vec2( 0.0f,    0.0f),    vec2( offsetw,  0.0f),
-	vec2(-offsetw, -offseth), vec2( 0.0f,   -offseth), vec2( offsetw, -offseth)
-);
 
 out vec4 FragColor;
 
@@ -64,9 +58,9 @@ in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
 
-uniform vec3 viewPos;
 uniform Material material;
-uniform PointLight light;
+uniform vec3 viewPos;
+uniform PointLight pointLight;
 uniform DirectionalLight dirLight;
 
 vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -111,7 +105,7 @@ void main()
 	vec3 viewDir = normalize(viewPos - FragPos);
 	
 	result = calcDirectionalLight(dirLight, normal, FragPos, viewDir);
-	result += calcPointLight(light, normal, FragPos, viewDir);
+	result += calcPointLight(pointLight, normal, FragPos, viewDir);
 
 	float alpha = texture(material.texture_alpha1, TexCoord).g;
 	if(alpha < 0.1)

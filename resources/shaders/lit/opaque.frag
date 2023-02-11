@@ -56,7 +56,7 @@ in vec3 FragPos;
 
 uniform vec3 viewPos;
 uniform Material material;
-uniform PointLight light;
+uniform PointLight pointLight;
 uniform DirectionalLight dirLight;
 
 vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -101,7 +101,7 @@ void main()
 	vec3 viewDir = normalize(viewPos - FragPos);
 	
 	result += calcDirectionalLight(dirLight, normal, FragPos, viewDir);
-	result += calcPointLight(light, normal, FragPos, viewDir);
+	result += calcPointLight(pointLight, normal, FragPos, viewDir);
 
 	FragColor = vec4(result, 1.0f);
 }
