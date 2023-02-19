@@ -16,33 +16,53 @@
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow*, int width, int height);
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void processInput(GLFWwindow* window, Camera& camera);
 unsigned int loadTexture(const char* imagePath);
 unsigned int loadCubemap(std::vector<std::string>& faces);
 void initLights(Shader& shader, Camera& camera);
 
 // 窗口设置
-const unsigned int SCR_WIDTH  = 1280;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH  = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
-// 帧数监测
-float deltaTime = 0.0f; // 当前帧与渲染上一帧的时间差
-float lastFrame = 0.0f; // 上一帧的时间
-
-// 鼠标设置
-bool firstMouse = true;
-float lastX     = float(SCR_WIDTH) / 2.0f;
-float lastY     = float(SCR_HEIGHT) / 2.0f;
-
-// 光源设置
-glm::vec3 lightPos(1.7f, 1.0f, 0.3f); // 点光
-glm::vec3 lightColor(1.0f, 0.5f, 0.2f);	 // 点光色
-glm::vec3 lightDir(-1.0f, -1.0f, 1.0f); // 平行光
 
 // 盒子设置
-glm::vec3 boxPosition(-3.0f, 0.0f, 0.0f);
+glm::vec3 boxPosition(-9.2f, 4.0f, 0.0f);
+// 小岛设置
+glm::vec3 rocksPosition[]{
+	glm::vec3(0.0f, -1.0f, -4.f),
+	glm::vec3(-2.0f, -0.5f, 3.0f),
+	glm::vec3(-3.0f, 0.3f, -3.0f),
+	glm::vec3(0.5f, -2.0f, 2.0f),
+};
+float rocksScale[]{
+	0.5f, 0.3f, 0.6f, 0.45f,
+};
+float rocksRand[]{
+	0.5f, -0.3f, 1.6f, 2.65f,
+};
+
+// 光源设置
+glm::vec3 lightPos[]{
+	rocksPosition[0] + glm::vec3(0.0f, 6.5f*rocksScale[0], 0.0f),
+	rocksPosition[1] + glm::vec3(0.0f, 6.5f*rocksScale[1], 0.0f),
+	rocksPosition[2] + glm::vec3(0.0f, 6.5f*rocksScale[2], 0.0f),
+	rocksPosition[3] + glm::vec3(0.0f, 6.5f*rocksScale[3], 0.0f),
+};
+glm::vec3 lightColor[]{
+	glm::vec3(0.2f, 1.0f, 0.5f),
+	glm::vec3(1.0f, 0.2f, 0.5f),
+	glm::vec3(0.2f, 0.5f, 1.0f),
+	glm::vec3(0.8f, 0.3f, 0.8f),
+};
+glm::vec3 dirLightDir(0.7f, -0.5f, 1.0f); // 平行光
+glm::vec3 dirLightColor(0.085f, 0.075f, 0.065f); // 平行光色
+
+bool lightsOn = true;
+
+int iPostprocess = 0;
+
 
 int main()
 {
@@ -60,7 +80,7 @@ int main()
 #endif
 
 	// 创建窗口 x,x,x,全屏
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "importModel", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Island and Eye of Cthulhu", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -71,9 +91,8 @@ int main()
 	glfwMakeContextCurrent(window);
 	// 设定窗口内容适应拖拽
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// 设定鼠标输入
-	//glfwSetCursorPosCallback(window, mouse_callback);
-	//glfwSetScrollCallback(window, scroll_callback);
+	// 设定输入
+	glfwSetKeyCallback(window, key_callback);
 	// 加载 GLAD 使opengl正常工作
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -84,7 +103,7 @@ int main()
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
 	// 生成相机
-	Camera camera(window, (float)SCR_WIDTH, (float)SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
+	Camera camera(window, (float)SCR_WIDTH, (float)SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 6.0f));
 
 
 	//---绘制设置---//
@@ -279,45 +298,34 @@ int main()
 	std::string corePath           = "resources/shaders/core.vert";
 	std::string skyboxVertPath     = "resources/shaders/skybox.vert";
 	std::string blurPath           = "resources/shaders/postprocess/blur.frag";
-	std::string sharpenPath        = "resources/shaders/postprocess/sharpen.frag";
+	std::string sharpenPath        = "resources/shaders/postprocess/kernel.frag";
 	std::string unlitOpaquePath    = "resources/shaders/unlit/unlitOpaque.frag";
 	std::string unlitReflectPath   = "resources/shaders/unlit/unlitReflect.frag";
 	std::string skyboxFragPath     = "resources/shaders/unlit/skybox.frag";
 	std::string litOpaquePath      = "resources/shaders/lit/opaque.frag";
 	std::string litTransparentPath = "resources/shaders/lit/transparent.frag";
 	// Model path
-	std::string housePath    = "resources/models/forest_house/forest_house.fbx";
-	std::string backpackPath = "resources/models/backpack/backpack.obj";
+	std::string islandPath    = "resources/models/fantasy-environment/fantasy-environment-combined.fbx";
+	std::string bigEyePath    = "resources/models/monster-eye/monster-eye.fbx";
+	std::string rocks1Path    = "resources/models/rocks/rocks1.fbx";
 
 	// 纹理对象
-	stbi_set_flip_vertically_on_load(true);
-	unsigned int diffuseMap = loadTexture(containerDiffPath.c_str());
-	unsigned int specularMap = loadTexture(containerSpecPath.c_str());
 	stbi_set_flip_vertically_on_load(false);
 	unsigned int skyboxMap = loadCubemap(skyboxDiffPath);
 
 	// 设置shader
 	// ---------
-	Shader boxShader(vertPath.c_str(), litOpaquePath.c_str());
 	Shader reflectShader(vertPath.c_str(), unlitReflectPath.c_str());
 	Shader lightShader(vertPath.c_str(), unlitOpaquePath.c_str());
 	Shader screenShader(corePath.c_str(), sharpenPath.c_str());
 	Shader skyboxShader(skyboxVertPath.c_str(), skyboxFragPath.c_str());
-	Shader houseShader(vertPath.c_str(), litTransparentPath.c_str());
-	Shader backpackShader(vertPath.c_str(), litOpaquePath.c_str());
-	// boxShader
-	boxShader.bind();
-	boxShader.setInt("material.texture_diffuse1", 0);
-	boxShader.setInt("material.texture_specular1", 1);
-	boxShader.unBind();
+	Shader islandShader(vertPath.c_str(), litOpaquePath.c_str());
+	Shader bigEyeShader(vertPath.c_str(), litOpaquePath.c_str());
+	Shader rocks1Shader(vertPath.c_str(), litOpaquePath.c_str());
 	// refelctShader
 	reflectShader.bind();
 	reflectShader.setInt("skybox", 0);
 	reflectShader.unBind();
-	// lighShader
-	lightShader.bind();
-	lightShader.setVec3("material.baseColor", lightColor);
-	lightShader.unBind();
 	// screenShader
 	screenShader.bind();
 	screenShader.setInt("iScreenTexture", 0);
@@ -328,7 +336,7 @@ int main()
 	skyboxShader.unBind();
 	// 创建uniform buffer object
 	// ------------------------
-	// Matrices
+	// 变换矩阵view、projection
 	unsigned int uboMatrices;
 	glGenBuffers(1, &uboMatrices);
 	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
@@ -338,8 +346,9 @@ int main()
 	
 	// 导入模型
 	// -------
-	Model houseModel(housePath.c_str());
-	//Model backpackModel(backpackPath.c_str(), eNULL);
+	Model bigEyeModel(bigEyePath.c_str());
+	Model islandModel(islandPath.c_str());
+	Model rocks1Model(rocks1Path.c_str());
 
 	// 设置Framebuffer
 	// --------------
@@ -369,7 +378,6 @@ int main()
 
 	// OPENGL渲染设置
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
 
 	// 渲染循环
 	// ---------------
@@ -398,70 +406,70 @@ int main()
 		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		// pointLight
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
 		// 进行后处理的渲染
 		// -------------
 		// 绑定Frambuffer进行渲染
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		glClearColor(lightColor.r, lightColor.g, lightColor.b, 0.0f);
+		glClearColor(lightColor[0].r, lightColor[0].g, lightColor[0].b, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// 绘制箱子
-		boxShader.bind();
-		initLights(boxShader, camera);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, boxPosition);
-		model = glm::rotate(model, glm::radians((float)glfwGetTime() * 20), glm::vec3(1.0f, 0.3f, 0.5f));
-		boxShader.setMat4("model", model);
-		// 绘制前绑定
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-		boxVAO.bind();
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		boxVAO.unBind();
-		boxShader.unBind();
-		
-		// 绘制反光箱子
+		// 绘制折射方块
 		reflectShader.bind();
 		reflectShader.setVec3("cameraPos", camera.position);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 2.0f, 2.0f));
+		model = glm::translate(model, boxPosition);
 		model = glm::scale(model, glm::vec3(0.5f));
+		model = glm::rotate(model, glm::radians((float)glfwGetTime() * 20), glm::vec3(1.0f, 0.3f, 0.5f));
 		reflectShader.setMat4("model", model);
-		// 绘制前绑定
 		boxVAO.bind();
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		boxVAO.unBind();
 		reflectShader.unBind();
 
-		// 绘制房子
-		houseShader.bind();
-		initLights(houseShader, camera);
-		houseModel.scale(glm::vec3(0.2f));
-		houseModel.Draw(houseShader, camera);
-		houseShader.unBind();
+		// 绘制大眼
+		bigEyeShader.bind();
+		initLights(bigEyeShader, camera);
+		bigEyeModel.translate(glm::vec3(-80.f, -20.f + sinf((float)glfwGetTime() * 0.5f), 0.f));
+		bigEyeModel.rotate(90.f, glm::vec3(0.f, 1.f, 0.f));
+		bigEyeModel.scale(glm::vec3(13.f));
+		bigEyeModel.Draw(bigEyeShader, camera);
+		bigEyeShader.unBind();
 
-		// 绘制背包
-		/*backpackShader.bind();
-		initLights(backpackShader, camera);
-		backpackModel.translate(glm::vec3(3.0f, 0.f, 0.f));
-		backpackModel.scale(glm::vec3(0.5f));
-		backpackModel.Draw(backpackShader, camera);
-		backpackShader.unBind();*/
+		// 绘制主岛
+		islandShader.bind();
+		initLights(islandShader, camera);
+		islandModel.scale(glm::vec3(0.05f));
+		islandModel.Draw(islandShader, camera);
+		islandShader.unBind();
+		// 绘制小岛
+		rocks1Shader.bind();
+		initLights(rocks1Shader, camera);
+		for (int i = 0; i < 4; i++)
+		{
+			rocks1Model.translate(rocksPosition[i]);
+			rocks1Model.rTranslate(glm::vec3(0.0f, sinf(glfwGetTime() + rocksRand[i]) * 0.3f, 0.0f));
+			rocks1Model.scale(glm::vec3(rocksScale[i]));
+			rocks1Model.Draw(rocks1Shader, camera);
+		}
+		rocks1Shader.unBind();
 
 		// 渲染光源
 		lightShader.bind();
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.25f));
-		lightShader.setMat4("model", model);
-		lightVAO.bind();
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		lightVAO.unBind();
+		for (int i = 0;i < 4; i++)
+		{
+			lightShader.setVec3("material.baseColor", lightColor[i]);
+			model = glm::mat4(1.0f);
+			lightPos[i] += (glm::vec3(0.0f, sinf(glfwGetTime() + rocksRand[i]) * 0.3f, 0.0f) * rocksScale[i] * 0.03f);
+			model = glm::translate(model, lightPos[i]);
+			model = glm::scale(model, glm::vec3(0.25f));
+			lightShader.setMat4("model", model);
+			if (lightsOn)
+			{
+				lightVAO.bind();
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+				lightVAO.unBind();
+			}
+		}
 		lightShader.unBind();
 
 		// 最后 绘制天空盒
@@ -481,15 +489,13 @@ int main()
 		// 返回默认Frambuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		screenShader.bind();
+		screenShader.setInt("iEffect", iPostprocess);
 		screenVAO.bind();
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		screenVAO.unBind();
 		screenShader.unBind();
-		glDisable(GL_BLEND);
 
 
 		// 交换buffer 响应窗口事件
@@ -499,7 +505,7 @@ int main()
 	}
 
 	// 删除OBJECT
-	boxVAO.Delete();
+	boxVAO.Delete();	
 	lightVAO.Delete();
 	screenVAO.Delete();
 	skyboxVAO.Delete();
@@ -518,16 +524,12 @@ int main()
 
 void processInput(GLFWwindow* window, Camera& camera)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, true); 
-	}
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
 	{
 		camera.enableOp = false;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 	{
 		camera.enableOp = true;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -539,31 +541,32 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
-	
-	// 鼠标第一次进入窗口
-	if (firstMouse)
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
-		lastX = xpos;
-		lastY = ypos;
-		firstMouse = false;
+		glfwSetWindowShouldClose(window, true);
 	}
-	
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // y坐标下小上大
-	
-	lastX = xpos;
-	lastY = ypos;
-
-	//camera.processMouseMovement(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-	//camera.processMouseScroll(static_cast<float>(yoffset));
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	{
+		lightsOn = !lightsOn;
+	}
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+	{
+		iPostprocess = 1;
+	}
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+	{
+		iPostprocess = 2;
+	}
+	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+	{
+		iPostprocess = 3;
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		iPostprocess = 0;
+	}
 }
 
 void initLights(Shader& shader, Camera& camera)
@@ -573,26 +576,88 @@ void initLights(Shader& shader, Camera& camera)
 	shader.setFloat("material.shininess", 128.0f);
 
 	// dirlight
-	// --------
-	shader.setVec3("dirLight.direction", lightDir);
-	shader.setVec3("dirLight.ambient", glm::vec3(0.2f));
-	shader.setVec3("dirLight.diffuse", glm::vec3(0.7f));
-	shader.setVec3("dirLight.specular", glm::vec3(0.5f));
-	// 衰弱
-	shader.setFloat("dirLight.constant", 1.0f);
-	shader.setFloat("dirLight.linear", 0.09f);
-	shader.setFloat("dirLight.quadratic", 0.032f);
-
-	// pointlight01
 	// ------------
-	shader.setVec3("pointLight.position", lightPos);
-	shader.setVec3("pointLight.ambient", glm::vec3(0.2f));
-	shader.setVec3("pointLight.diffuse", lightColor);
-	shader.setVec3("pointLight.specular", glm::vec3(1.0f));
+	shader.setBool("lights[0].isEnabled", true);
+	shader.setBool("lights[0].isLocal", false);
+	shader.setVec3("lights[0].direction", dirLightDir);
+	shader.setVec3("lights[0].ambient", glm::vec3(0.2f));
+	shader.setVec3("lights[0].color", dirLightColor);
 	// 衰弱
-	shader.setFloat("pointLight.constant", 1.0f);
-	shader.setFloat("pointLight.linear", 0.09f);
-	shader.setFloat("pointLight.quadratic", 0.032f);
+	shader.setFloat("lights[0].constant", 1.0f);
+	shader.setFloat("lights[0].linear", 0.09f);
+	shader.setFloat("lights[0].quadratic", 0.032f);
+
+	if (lightsOn)
+	{
+		// pointlight01
+		// ------------
+		shader.setBool("lights[1].isEnabled", true);
+		shader.setBool("lights[1].isLocal", true);
+		shader.setVec3("lights[1].position", lightPos[0]);
+		shader.setVec3("lights[1].ambient", glm::vec3(0.2f));
+		shader.setVec3("lights[1].color", lightColor[0]);
+		// 衰弱
+		shader.setFloat("lights[1].constant", 1.0f);
+		shader.setFloat("lights[1].linear", 0.09f);
+		shader.setFloat("lights[1].quadratic", 0.032f);
+
+		// pointlight02
+		// ------------
+		shader.setBool("lights[2].isEnabled", true);
+		shader.setBool("lights[2].isLocal", true);
+		shader.setVec3("lights[2].position", lightPos[1]);
+		shader.setVec3("lights[2].ambient", glm::vec3(0.2f));
+		shader.setVec3("lights[2].color", lightColor[1]);
+		// 衰弱
+		shader.setFloat("lights[2].constant", 1.0f);
+		shader.setFloat("lights[2].linear", 0.09f);
+		shader.setFloat("lights[2].quadratic", 0.032f);
+
+		// pointlight03
+		// ------------
+		shader.setBool("lights[3].isEnabled", true);
+		shader.setBool("lights[3].isLocal", true);
+		shader.setVec3("lights[3].position", lightPos[2]);
+		shader.setVec3("lights[3].ambient", glm::vec3(0.2f));
+		shader.setVec3("lights[3].color", lightColor[2]);
+		// 衰弱
+		shader.setFloat("lights[3].constant", 1.0f);
+		shader.setFloat("lights[3].linear", 0.09f);
+		shader.setFloat("lights[3].quadratic", 0.032f);
+
+		// pointlight04
+		// ------------
+		shader.setBool("lights[4].isEnabled", true);
+		shader.setBool("lights[4].isLocal", true);
+		shader.setVec3("lights[4].position", lightPos[3]);
+		shader.setVec3("lights[4].ambient", glm::vec3(0.2f));
+		shader.setVec3("lights[4].color", lightColor[3]);
+		// 衰弱
+		shader.setFloat("lights[4].constant", 1.0f);
+		shader.setFloat("lights[4].linear", 0.09f);
+		shader.setFloat("lights[4].quadratic", 0.032f);
+	}
+	else
+	{
+		// pointlight01
+		// ------------
+		shader.setBool("lights[1].isEnabled", false);
+
+
+		// pointlight02
+		// ------------
+		shader.setBool("lights[2].isEnabled", false);
+
+
+		// pointlight03
+		// ------------
+		shader.setBool("lights[3].isEnabled", false);
+
+
+		// pointlight04
+		// ------------
+		shader.setBool("lights[4].isEnabled", false);
+	}
 }
 
 unsigned int loadTexture(const char* imagePath)

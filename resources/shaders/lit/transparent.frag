@@ -9,32 +9,6 @@ struct Material{
 	float shininess;
 };
 
-struct DirectionalLight{
-					//基准	偏移(必须是基准的倍数
-	vec3 direction;	//16	16
-
-	vec3 ambient;	//16	32
-	vec3 diffuse;	//16	48
-	vec3 specular;	//16	64
-
-	float constant;	//4		80
-	float linear;	//4		84
-	float quadratic;//4		88
-};
-
-struct PointLight{
-					//基准	偏移(必须是基准的倍数
-	vec3 position;	//16	96
-
-	vec3 ambient;	//16	112
-	vec3 diffuse;	//16	128
-	vec3 specular;	//16	144
-
-	float constant;	//4		160
-	float linear;	//4		164
-	float quadratic;//4		168
-};
-
 struct SpotLight{
 	vec3 position;
 	vec3 direction;
@@ -52,6 +26,24 @@ struct SpotLight{
 	float quadratic;
 };
 
+struct Light{
+	bool isEnabled;	
+	bool isLocal;	// true 点光或锥光，false 方向光
+	bool isSpot;
+
+	vec3 ambient;
+	vec3 color;
+
+	vec3 position;
+	vec3 direction;
+	float spotCosCutoff;
+	float spotExponent;
+	// 衰弱
+	float constant;
+	float linear;
+	float quadratic;
+};
+
 out vec4 FragColor;
 
 in vec2 TexCoord;
@@ -60,37 +52,37 @@ in vec3 FragPos;
 
 uniform Material material;
 uniform vec3 viewPos;
-uniform PointLight pointLight;
-uniform DirectionalLight dirLight;
+const int LIGHT_NUM = 16;
+uniform Light lights[LIGHT_NUM];
 
-vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 calcDirectionalLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
 	vec3 lightDir = normalize(-light.direction);
 
 	vec3 ambient  = light.ambient * texture(material.texture_diffuse1, TexCoord).rgb;
 
 	float diff = max(dot(lightDir,normal),0.0);
-	vec3 diffuse = light.diffuse * diff * texture(material.texture_diffuse1,TexCoord).rgb;
+	vec3 diffuse = light.color * diff * texture(material.texture_diffuse1,TexCoord).rgb;
 
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	vec3 specular = light.specular * spec * texture(material.texture_specular1, TexCoord).rgb;
+	vec3 specular = light.color * spec * texture(material.texture_specular1, TexCoord).rgb;
 
 	return (ambient + diffuse + specular);
 }
 
-vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 calcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
 	vec3 lightDir = normalize(light.position - fragPos);
 
 	vec3 ambient  = light.ambient * texture(material.texture_diffuse1, TexCoord).rgb;
 
 	float diff = max(dot(lightDir,normal),0.0);
-	vec3 diffuse = light.diffuse * diff * texture(material.texture_diffuse1,TexCoord).rgb;
+	vec3 diffuse = light.color * diff * texture(material.texture_diffuse1,TexCoord).rgb;
 
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	vec3 specular = light.specular * spec * texture(material.texture_specular1, TexCoord).rgb;
+	vec3 specular = light.color * spec * texture(material.texture_specular1, TexCoord).rgb;
 
 	float distance = length(light.position - fragPos);
 	float intensity = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
@@ -103,9 +95,17 @@ void main()
 	vec3 result;
 	vec3 normal = normalize(Normal);
 	vec3 viewDir = normalize(viewPos - FragPos);
-	
-	result = calcDirectionalLight(dirLight, normal, FragPos, viewDir);
-	result += calcPointLight(pointLight, normal, FragPos, viewDir);
+
+	for(int i = 0; i < LIGHT_NUM; i++)
+	{
+		if(lights[i].isEnabled)
+		{
+			if(lights[i].isLocal)
+				result += calcPointLight(lights[i], normal, FragPos, viewDir);
+			else
+				result += calcDirectionalLight(lights[i], normal, FragPos, viewDir);
+		}
+	}
 
 	float alpha = texture(material.texture_alpha1, TexCoord).g;
 	if(alpha < 0.1)

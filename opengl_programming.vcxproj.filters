@@ -55,7 +55,7 @@
     <None Include="resources\shaders\postprocess\blur.frag">
       <Filter>Shader\postporcess</Filter>
     </None>
-    <None Include="resources\shaders\postprocess\sharpen.frag">
+    <None Include="resources\shaders\postprocess\kernel.frag">
       <Filter>Shader\postporcess</Filter>
     </None>
     <None Include="resources\shaders\skybox.vert">

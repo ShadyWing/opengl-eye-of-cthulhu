@@ -19,7 +19,7 @@ Camera::Camera
 	isDashing(false),
 	isFPSController(false),
 	nearPlane(0.1f),
-	farPlane(100.0f)
+	farPlane(500.0f)
 {
 	camInst = this;
 

@@ -160,7 +160,7 @@
     <None Include="resources\shaders\Lit\transparent.frag" />
     <None Include="resources\shaders\Lit\opaque.frag" />
     <None Include="resources\shaders\postprocess\blur.frag" />
-    <None Include="resources\shaders\postprocess\sharpen.frag" />
+    <None Include="resources\shaders\postprocess\kernel.frag" />
     <None Include="resources\shaders\skybox.vert" />
     <None Include="resources\shaders\unlit\skybox.frag" />
     <None Include="resources\shaders\Unlit\unlitOpaque.frag" />
